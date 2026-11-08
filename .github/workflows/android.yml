@@ -15,33 +15,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Kodları indir
+      - name: Kodlari indir
         uses: actions/checkout@v4
 
       - name: Node.js kur
         uses: actions/setup-node@v4
         with:
-        node-version: 22
+          node-version: '22'
 
       - name: Java kur
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '21'
 
       - name: Paketleri kur
         run: npm ci
 
-      - name: Capacitor senkronizasyonu
+      - name: Android projesini senkronize et
         run: npx cap sync android
 
-      - name: APK oluştur
+      - name: APK olustur
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: APK dosyasını paylaş
+      - name: APK dosyasini yukle
         uses: actions/upload-artifact@v4
         with:
           name: DeepRead-APK
