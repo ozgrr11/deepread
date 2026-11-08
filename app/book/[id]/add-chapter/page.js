@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "../../../../lib/supabase/client";
 
-export default function AddChapter() {
+function AddChapterContent() {
   const { id } = useParams();
   const router = useRouter();
 
@@ -22,7 +22,9 @@ export default function AddChapter() {
     try {
       const supabase = createClient();
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
         setMessage("Önce giriş yapmalısın.");
@@ -95,6 +97,7 @@ export default function AddChapter() {
           />
 
           <button
+            type="submit"
             disabled={loading}
             className="w-full p-4 rounded-xl bg-blue-600 font-bold disabled:opacity-50"
           >
@@ -105,5 +108,19 @@ export default function AddChapter() {
         <p className="mt-5 text-red-400">{message}</p>
       </div>
     </main>
+  );
+}
+
+export default function AddChapter() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#080D18] text-white p-8">
+          Sayfa yükleniyor...
+        </main>
+      }
+    >
+      <AddChapterContent />
+    </Suspense>
   );
 }
