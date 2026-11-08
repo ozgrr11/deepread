@@ -6,6 +6,8 @@ on:
   push:
     paths:
       - 'android/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/android.yml'
 
 jobs:
@@ -16,13 +18,24 @@ jobs:
       - name: Kodları indir
         uses: actions/checkout@v4
 
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Java kur
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      - name: Android APK oluştur
+      - name: Paketleri kur
+        run: npm ci
+
+      - name: Capacitor senkronizasyonu
+        run: npx cap sync android
+
+      - name: APK oluştur
         run: |
           cd android
           chmod +x gradlew
