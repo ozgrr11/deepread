@@ -379,7 +379,7 @@ export default function Home() {
         </div>
 
         <p className="text-center text-gray-600 text-xs pb-6">
-          © {new Date().getFullYear()} DeepRead. Tüm hakları saklıdır.
+          © 2026 DeepRead. Tüm hakları saklıdır.
         </p>
 
       </footer>
