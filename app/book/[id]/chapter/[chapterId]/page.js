@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "../../../../../lib/supabase/client";
 
-export default function ReadChapter() {
+function ReadChapterContent() {
   const params = useParams();
   const router = useRouter();
 
@@ -19,7 +19,10 @@ export default function ReadChapter() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadChapter() {
+      setLoading(true);
       const supabase = createClient();
 
       const { data: chapterData, error } = await supabase
@@ -35,13 +38,25 @@ export default function ReadChapter() {
         .eq("book_id", bookId)
         .order("chapter_number");
 
-      if (!error) setChapter(chapterData);
+      if (cancelled) return;
+
+      if (!error) {
+        setChapter(chapterData);
+      } else {
+        setChapter(null);
+      }
 
       setChapters(allChapters || []);
       setLoading(false);
     }
 
-    if (bookId && chapterId) loadChapter();
+    if (bookId && chapterId) {
+      loadChapter();
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [bookId, chapterId]);
 
   if (loading) {
@@ -61,7 +76,7 @@ export default function ReadChapter() {
   }
 
   const currentIndex = chapters.findIndex(
-    (item) => item.id === chapterId
+    (item) => String(item.id) === String(chapterId)
   );
 
   const previousChapter = chapters[currentIndex - 1];
@@ -164,5 +179,19 @@ export default function ReadChapter() {
 
       </div>
     </main>
+  );
+}
+
+export default function ReadChapter() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#080D18] text-white p-8">
+          Bölüm yükleniyor...
+        </main>
+      }
+    >
+      <ReadChapterContent />
+    </Suspense>
   );
 }
