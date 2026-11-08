@@ -1,12 +1,15 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 
-export default function BookPage() {
-  const { id } = useParams();
+function BookPageContent() {
+  const params = useParams();
+  const id = params?.id;
+
+  const supabase = useMemo(() => createClient(), []);
 
   const [book, setBook] = useState(null);
   const [chapters, setChapters] = useState([]);
@@ -21,8 +24,6 @@ export default function BookPage() {
   const [ratings, setRatings] = useState([]);
   const [myRating, setMyRating] = useState(0);
   const [savingRating, setSavingRating] = useState(false);
-
-  const supabase = createClient();
 
   async function loadComments() {
     const { data } = await supabase
@@ -84,8 +85,16 @@ export default function BookPage() {
   }
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser();
+      setLoading(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (cancelled) return;
       setUser(user);
 
       const { data: bookData } = await supabase
@@ -100,6 +109,8 @@ export default function BookPage() {
         .eq("book_id", id)
         .order("chapter_number");
 
+      if (cancelled) return;
+
       setBook(bookData);
       setChapters(chapterData || []);
 
@@ -111,16 +122,27 @@ export default function BookPage() {
           .eq("book_id", id)
           .maybeSingle();
 
+        if (cancelled) return;
         setIsFavorite(!!favoriteData);
       }
 
       await loadComments();
+      if (cancelled) return;
+
       await loadRatings(user);
+      if (cancelled) return;
+
       setLoading(false);
     }
 
-    if (id) loadData();
-  }, [id]);
+    if (id) {
+      loadData();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, supabase]);
 
   async function saveRating(value) {
     if (!user) {
@@ -269,13 +291,11 @@ export default function BookPage() {
   return (
     <main className="min-h-screen bg-[#080D18] text-white">
       <div className="max-w-5xl mx-auto p-6 py-10">
-
         <a href="/" className="text-blue-400">
           ← Ana sayfa
         </a>
 
         <section className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10 mt-10 items-start">
-
           <div>
             {book.cover_url ? (
               <img
@@ -516,8 +536,21 @@ export default function BookPage() {
             </div>
           )}
         </section>
-
       </div>
     </main>
+  );
+}
+
+export default function BookPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#080D18] text-white p-8">
+          Kitap yükleniyor...
+        </main>
+      }
+    >
+      <BookPageContent />
+    </Suspense>
   );
 }
