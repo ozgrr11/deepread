@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 
-export default function AuthorPage() {
+function AuthorPageContent() {
   const { id } = useParams();
 
   const [profile, setProfile] = useState(null);
@@ -62,7 +62,6 @@ export default function AuthorPage() {
 
         {/* PROFİL BANNER */}
         <div className="mt-8 relative">
-
           {profile.banner_url ? (
             <img
               src={profile.banner_url}
@@ -91,7 +90,6 @@ export default function AuthorPage() {
 
         {/* YAZAR BİLGİLERİ */}
         <div className="bg-[#111B2D] p-8 pt-16 rounded-2xl mt-4">
-
           <h1 className="text-3xl font-bold text-blue-300">
             {profile.username}
           </h1>
@@ -99,7 +97,6 @@ export default function AuthorPage() {
           <p className="text-gray-300 mt-4 whitespace-pre-wrap">
             {profile.bio || "Henüz biyografi eklenmemiş."}
           </p>
-
         </div>
 
         {/* KİTAPLAR */}
@@ -136,8 +133,21 @@ export default function AuthorPage() {
             ))}
           </div>
         )}
-
       </div>
     </main>
+  );
+}
+
+export default function AuthorPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#080D18] text-white p-8">
+          Yükleniyor...
+        </main>
+      }
+    >
+      <AuthorPageContent />
+    </Suspense>
   );
 }
