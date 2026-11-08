@@ -17,7 +17,6 @@ export default function AdminPage() {
     const { data, error } = await supabase
       .from("books")
       .select("*")
-      .eq("status", "pending")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -89,7 +88,12 @@ export default function AdminPage() {
     setMessage("");
 
     try {
-      const relatedTables = ["chapters", "comments", "ratings", "favorites"];
+      const relatedTables = [
+        "chapters",
+        "comments",
+        "ratings",
+        "favorites"
+      ];
 
       for (const table of relatedTables) {
         const { error } = await supabase
@@ -98,7 +102,9 @@ export default function AdminPage() {
           .eq("book_id", book.id);
 
         if (error) {
-          throw new Error(`${table} kayıtları silinemedi: ${error.message}`);
+          throw new Error(
+            `${table} kayıtları silinemedi: ${error.message}`
+          );
         }
       }
 
@@ -111,8 +117,9 @@ export default function AdminPage() {
         throw new Error("Kitap silinemedi: " + error.message);
       }
 
-      setMessage("Kitap ve ilişkili kayıtları silindi.");
+      setMessage("Kitap ve ilişkili kayıtları silindi!");
       await loadBooks();
+
     } catch (error) {
       setMessage("Silme işlemi başarısız: " + error.message);
     } finally {
@@ -121,7 +128,11 @@ export default function AdminPage() {
   }
 
   if (loading) {
-    return <main style={{ padding: 40 }}>Yükleniyor...</main>;
+    return (
+      <main style={{ padding: 40 }}>
+        Yükleniyor...
+      </main>
+    );
   }
 
   if (!isAdmin) {
@@ -146,16 +157,25 @@ export default function AdminPage() {
       padding: "30px",
       fontFamily: "Arial"
     }}>
-      <h1 style={{ color: "#55aaff" }}>DeepRead Yönetici Paneli</h1>
-      <p>Onay bekleyen kitapları buradan inceleyebilirsin.</p>
+      <h1 style={{ color: "#55aaff" }}>
+        DeepRead Yönetici Paneli
+      </h1>
 
-      {message && <p style={{ marginTop: 15 }}>{message}</p>}
+      <p>
+        DeepRead'deki tüm kitapları buradan yönetebilirsin.
+      </p>
+
+      {message && (
+        <p style={{ marginTop: 15 }}>{message}</p>
+      )}
 
       <h2 style={{ marginTop: 25 }}>
-        Bekleyen Kitaplar ({books.length})
+        Tüm Kitaplar ({books.length})
       </h2>
 
-      {books.length === 0 && <p>Bekleyen kitap bulunmuyor.</p>}
+      {books.length === 0 && (
+        <p>Henüz kitap bulunmuyor.</p>
+      )}
 
       <div style={{
         display: "grid",
@@ -186,39 +206,62 @@ export default function AdminPage() {
             <p>Yazar: {book.author}</p>
             <p>{book.description}</p>
 
+            <p style={{
+              color:
+                book.status === "approved"
+                  ? "#35d47a"
+                  : book.status === "rejected"
+                  ? "#ff6464"
+                  : "#ffc857",
+              marginTop: 10,
+              marginBottom: 12
+            }}>
+              Durum: {
+                book.status === "approved"
+                  ? "Onaylandı"
+                  : book.status === "rejected"
+                  ? "Reddedildi"
+                  : "Bekliyor"
+              }
+            </p>
+
             <div style={{
               display: "flex",
               flexWrap: "wrap",
               gap: 8,
               marginTop: 12
             }}>
-              <button
-                onClick={() => changeStatus(book.id, "approved")}
-                style={{
-                  background: "#16834a",
-                  color: "white",
-                  padding: 10,
-                  border: 0,
-                  borderRadius: 6,
-                  cursor: "pointer"
-                }}
-              >
-                Onayla
-              </button>
+              {book.status !== "approved" && (
+                <button
+                  onClick={() => changeStatus(book.id, "approved")}
+                  style={{
+                    background: "#16834a",
+                    color: "white",
+                    padding: 10,
+                    border: 0,
+                    borderRadius: 6,
+                    cursor: "pointer"
+                  }}
+                >
+                  Onayla
+                </button>
+              )}
 
-              <button
-                onClick={() => changeStatus(book.id, "rejected")}
-                style={{
-                  background: "#b52d3b",
-                  color: "white",
-                  padding: 10,
-                  border: 0,
-                  borderRadius: 6,
-                  cursor: "pointer"
-                }}
-              >
-                Reddet
-              </button>
+              {book.status !== "rejected" && (
+                <button
+                  onClick={() => changeStatus(book.id, "rejected")}
+                  style={{
+                    background: "#b52d3b",
+                    color: "white",
+                    padding: 10,
+                    border: 0,
+                    borderRadius: 6,
+                    cursor: "pointer"
+                  }}
+                >
+                  Reddet
+                </button>
+              )}
 
               <button
                 onClick={() => deleteBook(book)}
@@ -233,7 +276,9 @@ export default function AdminPage() {
                   opacity: deletingId === book.id ? 0.5 : 1
                 }}
               >
-                {deletingId === book.id ? "Siliniyor..." : "🗑 Sil"}
+                {deletingId === book.id
+                  ? "Siliniyor..."
+                  : "🗑 Sil"}
               </button>
             </div>
           </div>
